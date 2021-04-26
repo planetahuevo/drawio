@@ -32,7 +32,8 @@ Draw.loadPlugin(function(ui)
 		var container = document.createElement('div');
 		container.style.position = 'absolute';
 		container.style.display = 'block';
-		container.style.background = '#ffffff';
+		container.style.background = (uiTheme == 'dark') ?
+			'#2a2a2a' : '#ffffff';
 		container.style.width = '100%';
 		container.style.height = '100%';
 		container.style.left = '0px';
@@ -353,12 +354,13 @@ Draw.loadPlugin(function(ui)
 	});
 	
 	// Click handler for chromeless mode
-	if (ui.editor.chromeless)
+	if (ui.editor.isChromelessView())
 	{
 		ui.editor.graph.click = function(me)
 		{
 			if (ui.editor.graph.model.isVertex(me.getCell()) &&
-				ui.editor.graph.model.getEdgeCount(me.getCell()) > 0)
+				ui.editor.graph.model.getEdgeCount(me.getCell()) > 0 &&
+				this.getLinkForCell(me.getCell()) == null)
 			{
 				exploreFromHere(me.getCell());
 			}

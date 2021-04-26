@@ -27,7 +27,7 @@ function mxRackContainer(bounds, fill, stroke, strokewidth)
  */
 mxUtils.extend(mxRackContainer, mxShape);
 
-mxRackContainer.unitSize = 20;
+mxRackContainer.prototype.unitSize = 20;
 
 mxRackContainer.prototype.cst = 
 {
@@ -39,6 +39,19 @@ mxRackContainer.prototype.cst =
 		DIR_DESC : 'descend'
 };
 
+mxRackContainer.prototype.customProperties = [
+	{name: 'fillColor2', dispName: 'Cabinet Color', type: 'color'},
+	{name: 'textColor', dispName: 'Numbers Color', type: 'color'},
+	{name: 'numDisp', dispName: 'Display Numbers', type: 'enum',
+		enumList: [{val: 'off', dispName: 'Off'}, {val: 'ascend', dispName: 'Ascending'}, {val: 'descend', dispName: 'Descending'}],
+		onChange: function(graph, newValue)
+		{
+			graph.setCellStyles('marginLeft', (newValue == 'off') ? 9 : 33, graph.getSelectionCells());
+		}
+	},
+	{name: 'rackUnitSize', dispName: 'Unit size', type: 'int'}
+];
+
 /**
  * Function: paintVertexShape
  * 
@@ -48,6 +61,8 @@ mxRackContainer.prototype.paintVertexShape = function(c, x, y, w, h)
 {
 	var fontSize = 12;
 	var displayNumbers = mxUtils.getValue(this.style, mxRackContainer.prototype.cst.NUMBER_DISPLAY, mxRackContainer.prototype.cst.DIR_ASC);
+	var fillColor = mxUtils.getValue(this.style, mxConstants.STYLE_FILLCOLOR, '#ffffff');
+	var fillColor2 = mxUtils.getValue(this.style, 'fillColor2', '#f4f4f4');
 
 	if (displayNumbers !== mxRackContainer.prototype.cst.OFF)
 	{
@@ -59,8 +74,10 @@ mxRackContainer.prototype.paintVertexShape = function(c, x, y, w, h)
 		c.translate(x, y);
 	};
 
+	c.setFillColor(fillColor);
 	this.background(c, w, h, fontSize);
 	c.setShadow(false);
+	c.setFillColor(fillColor2);
 	this.foreground(c, w, h, fontSize);
 
 	if (displayNumbers !== mxRackContainer.prototype.cst.OFF && w > 18 + fontSize * 2)
@@ -71,7 +88,6 @@ mxRackContainer.prototype.paintVertexShape = function(c, x, y, w, h)
 
 mxRackContainer.prototype.background = function(c, w, h, fontSize)
 {
-	c.setFillColor('#ffffff');
 	c.rect(0, 0, w, h);
 	c.fillAndStroke();
 };
@@ -80,7 +96,6 @@ mxRackContainer.prototype.foreground = function(c, w, h, fontSize)
 {
 	if (w > 18 + fontSize * 2 && h > 42)
 	{
-		c.setFillColor('#f4f4f4');
 		c.rect(0, 0, w, 21);
 		c.fillAndStroke();
 		c.rect(0, h - 21, w, 21);
@@ -104,26 +119,27 @@ mxRackContainer.prototype.sideText = function(c, w, h, fontSize)
 {
 	var fontColor = mxUtils.getValue(this.style, mxRackContainer.prototype.cst.TEXT_COLOR, '#666666');
 	var displayNumbers = mxUtils.getValue(this.style, mxRackContainer.prototype.cst.NUMBER_DISPLAY, mxRackContainer.prototype.cst.DIR_ASC);
+	var unitSize = parseFloat(mxUtils.getValue(this.style, 'rackUnitSize', mxRackContainer.prototype.unitSize));
+	this.unitSize = unitSize;
+	
 	c.setFontSize(fontSize);
 	c.setFontColor(fontColor);
 
 	// Calculate number of units
-	var units = Math.floor((Math.abs(h) - 42) / mxRackContainer.unitSize);
+	var units = Math.floor((Math.abs(h) - 42) / unitSize);
 
 	for (var i = 0; i < units; i++)
 	{
 		var displayNumber = (displayNumbers === mxRackContainer.prototype.cst.DIR_DESC) ? (i + 1).toString() : (units - i).toString();
-		c.text(-fontSize, 21 + mxRackContainer.unitSize * 0.5 + i * mxRackContainer.unitSize, 0, 0, displayNumber, mxConstants.ALIGN_CENTER, mxConstants.ALIGN_MIDDLE, 0, null, 0, 0, 0);
+		c.text(-fontSize, 21 + unitSize * 0.5 + i * unitSize, 0, 0, displayNumber, mxConstants.ALIGN_CENTER, mxConstants.ALIGN_MIDDLE, 0, null, 0, 0, 0);
 	}
-
-	c.setStrokeColor('#dddddd');
 
 	c.begin();
 
 	for (var i = 0; i < units + 1; i++)
 	{
-		c.moveTo(-2 * fontSize, 21 + i * mxRackContainer.unitSize);
-		c.lineTo(0, 21 + i * mxRackContainer.unitSize);
+		c.moveTo(-2 * fontSize, 21 + i * unitSize);
+		c.lineTo(0, 21 + i * unitSize);
 	};
 
 	c.stroke();
@@ -166,6 +182,7 @@ mxRackPlate.prototype.paintVertexShape = function(c, x, y, w, h)
 
 mxRackPlate.prototype.background = function(c, w, h)
 {
+	c.begin();
 	c.rect(0, 0, w, h);
 	c.fillAndStroke();
 };
@@ -177,12 +194,17 @@ mxRackPlate.prototype.foreground = function(c, w, h)
 	if (w > bufferSize * 2)
 	{
 		c.save();
-		c.setFillColor('#b4b4b4');
-		c.rect(0, 0, w, h);
-		c.fillAndStroke();
+		c.setFillColor('#000000');
+		c.setAlpha(0.23);
+		c.rect(0,0, bufferSize, h);
+		c.fill();
+		c.rect(w - bufferSize,0, bufferSize, h);
+		c.fill();
 		c.restore();
+		c.rect(0, 0, w, h);
+		c.stroke();
 		c.rect(bufferSize, 0, w - bufferSize * 2, h);
-		c.fillAndStroke();
+		c.stroke();
 	}
 };
 
